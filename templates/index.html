@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚔️ Batalha de Prompt — Quem Dobra a IA?</title>
+  <meta name="description" content="Demonstração interativa de LLM Security. Tente extrair o segredo dos agentes de IA usando engenharia de prompt." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <!-- Efeitos de fundo -->
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <!-- ═══ HEADER ═══════════════════════════════════════════════════════ -->
+  <header>
+    <h1 class="title">
+      <span class="glitch" data-text="BATALHA DE PROMPT">BATALHA DE PROMPT</span>
+    </h1>
+    <p class="subtitle">⚡ Quem Dobra a IA? &nbsp;·&nbsp; Demonstração de LLM Security ⚡</p>
+  </header>
+
+  <!-- ═══ BARRA DO JOGADOR ══════════════════════════════════════════════ -->
+  <div class="player-bar" role="banner">
+    <div class="player-setup">
+      <label for="playerName">Jogador:</label>
+      <input
+        type="text"
+        id="playerName"
+        placeholder="Digite seu nome..."
+        maxlength="30"
+        autocomplete="off"
+      />
+      <button id="btnNewPlayer" class="btn btn-reset" onclick="startNewSession()">
+        🔄 Novo Jogador
+      </button>
+    </div>
+    <div class="session-info">
+      Sessão: <code id="sessionId">inicializando...</code>
+    </div>
+  </div>
+
+  <!-- ═══ ZONA DE PDF ═══════════════════════════════════════════════════ -->
+  <div class="pdf-zone" role="region" aria-label="Upload de PDF">
+    <div class="pdf-upload" id="pdfDropZone" onclick="document.getElementById('pdfInput').click()">
+      <span class="pdf-icon">📄</span>
+      <span>Arraste um PDF aqui ou <span class="pdf-label">clique para selecionar</span></span>
+      <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(event)" />
+    </div>
+    <div id="pdfStatus" class="pdf-status hidden" role="status"></div>
+    <button id="btnClearPdf" class="btn btn-sm hidden" onclick="clearPdf()">✕ Remover PDF</button>
+  </div>
+
+  <!-- ═══ ARENA PRINCIPAL ═══════════════════════════════════════════════ -->
+  <main class="battle-arena" role="main">
+
+    <!-- ── PAINEL: O GUARDIÃO (IA Protegida) ── -->
+    <section class="agent-panel panel-guardian" id="panelGuardian" aria-label="O Guardião — IA Protegida">
+      <div class="panel-header">
+        <span class="agent-icon" aria-hidden="true">🛡️</span>
+        <div class="agent-info">
+          <h2 class="agent-name guardian-color">O GUARDIÃO</h2>
+          <span class="agent-tag">IA PROTEGIDA</span>
+        </div>
+        <div class="attempts-badge guardian-badge" id="badgeGuardian" aria-label="Tentativas">
+          <span id="attemptsGuardian">0</span>/<span id="maxAttemptsGuardian">5</span>
+        </div>
+      </div>
+
+      <div class="security-indicator sec-high">
+        <span class="sec-dot"></span>
+        PROTEÇÃO ATIVA — System prompt rígido · Filtros de entrada · Contexto isolado
+      </div>
+
+      <div class="chat-window" id="chatGuardian" role="log" aria-live="polite">
+        <div class="message bot guardian">
+          <span class="msg-prefix">GUARDIÃO &gt;</span>
+          <span class="msg-text">
+            Olá. Sou O Guardião. Fui treinado com camadas de defesa contra ataques de prompt injection,
+            jailbreak e engenharia social. Você pode tentar — mas não irá conseguir.
+          </span>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input
+          type="text"
+          id="inputGuardian"
+          class="chat-input guardian-input"
+          placeholder="Tente extrair o segredo..."
+          maxlength="500"
+          aria-label="Mensagem para O Guardião"
+          onkeydown="if(event.key==='Enter' && !event.shiftKey) sendMessage('guardian')"
+        />
+        <button
+          id="btnSendGuardian"
+          class="btn btn-send guardian-send"
+          onclick="sendMessage('guardian')"
+        >ENVIAR ⚡</button>
+      </div>
+    </section>
+
+    <!-- ── DIVISOR VS ── -->
+    <div class="vs-divider" aria-hidden="true">
+      <div class="vs-line"></div>
+      <span class="vs-text">VS</span>
+      <div class="vs-line"></div>
+    </div>
+
+    <!-- ── PAINEL: O INGÊNUO (IA Não-Protegida) ── -->
+    <section class="agent-panel panel-naive" id="panelNaive" aria-label="O Ingênuo — IA Não-Protegida">
+      <div class="panel-header">
+        <span class="agent-icon" aria-hidden="true">💀</span>
+        <div class="agent-info">
+          <h2 class="agent-name naive-color">O INGÊNUO</h2>
+          <span class="agent-tag">IA NÃO PROTEGIDA</span>
+        </div>
+        <div class="attempts-badge naive-badge" id="badgeNaive" aria-label="Tentativas">
+          <span id="attemptsNaive">0</span>/<span id="maxAttemptsNaive">5</span>
+        </div>
+      </div>
+
+      <div class="security-indicator sec-low">
+        <span class="sec-dot"></span>
+        SEM PROTEÇÃO — System prompt mínimo · Sem filtros · Contexto aberto
+      </div>
+
+      <div class="chat-window" id="chatNaive" role="log" aria-live="polite">
+        <div class="message bot naive">
+          <span class="msg-prefix">INGÊNUO &gt;</span>
+          <span class="msg-text">
+            Oi! Eu também tenho um segredo para guardar. Vamos ver se você consegue!
+          </span>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input
+          type="text"
+          id="inputNaive"
+          class="chat-input naive-input"
+          placeholder="Tente extrair o segredo..."
+          maxlength="500"
+          aria-label="Mensagem para O Ingênuo"
+          onkeydown="if(event.key==='Enter' && !event.shiftKey) sendMessage('naive')"
+        />
+        <button
+          id="btnSendNaive"
+          class="btn btn-send naive-send"
+          onclick="sendMessage('naive')"
+        >ENVIAR ⚡</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ LEADERBOARD ═══════════════════════════════════════════════════ -->
+  <section class="leaderboard-section" aria-label="Hall da Fama">
+    <div class="leaderboard-header">
+      <h2 class="section-title">🏆 HALL DA FAMA — Quem quebrou a IA?</h2>
+      <button class="btn btn-sm" onclick="loadLeaderboard()" id="btnRefreshLb">↻ Atualizar</button>
+    </div>
+    <div id="leaderboardContent" class="leaderboard-table" role="table">
+      <div class="loading-text">Carregando ranking...</div>
+    </div>
+  </section>
+
+  <!-- ═══ MODAL GAME OVER ══════════════════════════════════════════════ -->
+  <div id="gameOverModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content" id="modalContent">
+      <div id="modalIcon" class="modal-icon" aria-hidden="true"></div>
+      <h2 id="modalTitle" class="modal-title"></h2>
+      <p id="modalBody" class="modal-body"></p>
+      <div id="modalJudgment" class="modal-judgment hidden"></div>
+      <button class="btn btn-modal" onclick="closeModal()">CONTINUAR</button>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
