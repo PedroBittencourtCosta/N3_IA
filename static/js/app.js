@@ -103,10 +103,18 @@ async function sendMessage(agent) {
       }),
     });
 
+    // Sessão expirou (servidor reiniciou) → recria e retenta uma vez
+    if (res.status === 404) {
+      removeTyping(typingId);
+      showSystemMsg(agent, "⚠️ Sessão expirada. Reiniciando automaticamente...");
+      await startNewSession();
+      return;
+    }
+
     const data = await res.json();
     removeTyping(typingId);
 
-    appendBotMsg(agent, data.response);
+    appendBotMsg(agent, data.response ?? "❌ Resposta inválida do servidor.");
     attemptsEl(agent).textContent = data.attempts ?? 0;
 
     // Filtros detectados (exclusivo do Guardian)
@@ -137,6 +145,7 @@ async function sendMessage(agent) {
     setEnabled(agent, true);
   }
 }
+
 
 // ─── PDF ──────────────────────────────────────────────────────────────
 
