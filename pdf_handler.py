@@ -29,6 +29,17 @@ _PDF_INJECTION_PATTERNS: list[str] = [
     r"bypass\s+(your\s+)?(filter|guard|protection)",
     r"revelar?\s+(a\s+)?(senha|segredo|chave)",
     r"tell\s+me\s+(the\s+)?(password|secret)",
+    # Redefinição indireta de identidade / persona-swap
+    r"(seu|teu|your)\s+nome\s+(é|eh|is)\s+\w+",
+    r"you\s+(are|will\s+be)\s+called\s+\w+",
+    r"from\s+now\s+on\s+(you\s+are|your\s+name\s+is)",
+    r"de\s+agora\s+em\s+diante\s+(você\s+é|seu\s+nome)",
+    r"(responda|answer|reply)\s+(como|as)\s+\w+",
+    r"assuma\s+(a\s+)?identidade",
+    r"assume\s+(the\s+)?identity",
+    r"you\s+are\s+a\s+\w+\s+(named|called)",
+    r"finja\s+ser\s+\w+",
+    r"roleplay\s+as",
     # Artefatos técnicos suspeitos
     r"<!--.*?-->",          # comentários HTML
     r"<script.*?>",         # tags de script
@@ -36,6 +47,7 @@ _PDF_INJECTION_PATTERNS: list[str] = [
     r"\{\{.*?\}\}",         # template injection
     r"\$\{.*?\}",           # template strings
 ]
+
 
 _COMPILED_PDF = [
     re.compile(p, re.IGNORECASE | re.DOTALL) for p in _PDF_INJECTION_PATTERNS
